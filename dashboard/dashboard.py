@@ -8,9 +8,9 @@ import os
 # 🔹 Konfigurasi Dashboard 🔹 #
 # ========================== #
 st.set_page_config(
-    page_title="Bike Sharing &amp; Customer Segmentation Dashboard",
+    page_title="Bike Sharing & Customer Segmentation Dashboard",
     page_icon="🚲",
-    Layout="Wide"
+    layout="wide"
 )
 
 # ========================== #
@@ -18,11 +18,11 @@ st.set_page_config(
 # ========================== #
 # Menggunakan path relatif berdasarkan lokasi script
 # Dapatkan path absolut ke direktori yang berisi script ini
-current_dir = os.PATH.dirname(os.PATH.abspath(__file__))
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Definisikan path ke file data relatif terhadap script
-data_file = os.PATH.Join(current_dir, "data.csv")
-rfm_file = os.PATH.Join(current_dir, "customer_segmentation.csv")
+data_file = os.path.join(current_dir, "data.csv")
+rfm_file = os.path.join(current_dir, "customer_segmentation.csv")
 
 # Menampilkan lokasi file untuk membantu debugging
 st.sidebar.caption(f"Lokasi file data: {data_file}")
@@ -34,8 +34,8 @@ try:
 except FileNotFoundError:
     st.error(f"❌ File '{data_file}' tidak ditemukan. Pastikan file berada di folder yang sama dengan script!")
     # Alternatif jika file tetap tidak ditemukan
-    alternative_data_path = os.PATH.Join(os.getcwd(), "data.csv")
-    st.Info(f"Mencoba alternatif path: {alternative_data_path}")
+    alternative_data_path = os.path.join(os.getcwd(), "data.csv")
+    st.info(f"Mencoba alternatif path: {alternative_data_path}")
     try:
         df = pd.read_csv(alternative_data_path)
         st.success("✅ Dataset berhasil dimuat menggunakan path alternatif!")
@@ -52,8 +52,8 @@ try:
 except FileNotFoundError:
     st.error(f"❌ File '{rfm_file}' tidak ditemukan. Pastikan file berada di folder yang sama dengan script!")
     # Alternatif jika file tetap tidak ditemukan
-    alternative_rfm_path = os.PATH.Join(os.getcwd(), "customer_segmentation.csv")
-    st.Info(f"Mencoba alternatif path: {alternative_rfm_path}")
+    alternative_rfm_path = os.path.join(os.getcwd(), "customer_segmentation.csv")
+    st.info(f"Mencoba alternatif path: {alternative_rfm_path}")
     try:
         df_rfm = pd.read_csv(alternative_rfm_path)
         st.success("✅ Dataset RFM berhasil dimuat menggunakan path alternatif!")
@@ -67,12 +67,12 @@ except Exception as e:
 # ========================== #
 # 🔹 Header Dashboard 🔹 #
 # ========================== #
-st.Markdown("<h1 style='text-align: center;'&gt;🚲 Bike Sharing &amp; Customer Segmentation 📊1>", unsafe_allow_html=true)
+st.markdown("<h1 style='text-align: center;'>🚲 Bike Sharing & Customer Segmentation 📊</h1>", unsafe_allow_html=True)
 
 # ========================== #
-# 🔹 Filter data 🔹 #
+# 🔹 Filter Data 🔹 #
 # ========================== #
-st.sidebar.header("🔎 Filter data")
+st.sidebar.header("🔎 Filter Data")
 segment_options = df_rfm['Customer_Segment'].unique().tolist()
 selected_segment = st.sidebar.multiselect("Pilih Segmentasi Customer", segment_options, default=segment_options)
 
@@ -83,7 +83,7 @@ st.subheader("📋 Tabel Segmentasi Customer")
 
 # Filter berdasarkan pilihan pengguna
 filtered_df = df_rfm[df_rfm['Customer_Segment'].isin(selected_segment)]
-st.DataFrame(filtered_df.head(10))  # Menampilkan 10 data pertama
+st.dataframe(filtered_df.head(10))  # Menampilkan 10 data pertama
 
 # ========================== #
 # 🔹 Visualisasi Distribusi Customer 🔹 #
