@@ -1,7 +1,8 @@
-Import Streamlit as st
-Import Pandas as pd
-Import matplotlib.pyplot as plt
-Import seaborn as sns
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
 
 # ========================== #
 # 🔹 Konfigurasi Dashboard 🔹 #
@@ -15,14 +16,50 @@ st.set_page_config(
 # ========================== #
 # 🔹 Membaca Dataset 🔹 #
 # ========================== #
-file_path = "data.csv"  # Sesuaikan dengan path yang diunggah
+# Menggunakan path relatif berdasarkan lokasi script
+# Dapatkan path absolut ke direktori yang berisi script ini
+current_dir = os.PATH.dirname(os.PATH.abspath(__file__))
+
+# Definisikan path ke file data relatif terhadap script
+data_file = os.PATH.Join(current_dir, "data.csv")
+rfm_file = os.PATH.Join(current_dir, "customer_segmentation.csv")
+
+# Menampilkan lokasi file untuk membantu debugging
+st.sidebar.caption(f"Lokasi file data: {data_file}")
+st.sidebar.caption(f"Lokasi file RFM: {rfm_file}")
 
 try:
-    df = pd.read_csv(file_path)
+    df = pd.read_csv(data_file)
     st.success("✅ Dataset berhasil dimuat!")
 except FileNotFoundError:
-    st.error(f"❌ File '{file_path}' tidak ditemukan. Periksa kembali lokasi file!")
+    st.error(f"❌ File '{data_file}' tidak ditemukan. Pastikan file berada di folder yang sama dengan script!")
+    # Alternatif jika file tetap tidak ditemukan
+    alternative_data_path = os.PATH.Join(os.getcwd(), "data.csv")
+    st.Info(f"Mencoba alternatif path: {alternative_data_path}")
+    try:
+        df = pd.read_csv(alternative_data_path)
+        st.success("✅ Dataset berhasil dimuat menggunakan path alternatif!")
+    except FileNotFoundError:
+        st.error("❌ File data tidak dapat ditemukan. Upload file atau periksa nama file!")
+        st.stop()
+except Exception as e:
+    st.error(f"❌ Terjadi kesalahan saat membaca file: {e}")
     st.stop()
+
+try:
+    df_rfm = pd.read_csv(rfm_file)
+    st.success("✅ Dataset RFM berhasil dimuat!")
+except FileNotFoundError:
+    st.error(f"❌ File '{rfm_file}' tidak ditemukan. Pastikan file berada di folder yang sama dengan script!")
+    # Alternatif jika file tetap tidak ditemukan
+    alternative_rfm_path = os.PATH.Join(os.getcwd(), "customer_segmentation.csv")
+    st.Info(f"Mencoba alternatif path: {alternative_rfm_path}")
+    try:
+        df_rfm = pd.read_csv(alternative_rfm_path)
+        st.success("✅ Dataset RFM berhasil dimuat menggunakan path alternatif!")
+    except FileNotFoundError:
+        st.error("❌ File RFM tidak dapat ditemukan. Upload file atau periksa nama file!")
+        st.stop()
 except Exception as e:
     st.error(f"❌ Terjadi kesalahan saat membaca file: {e}")
     st.stop()
@@ -30,40 +67,59 @@ except Exception as e:
 # ========================== #
 # 🔹 Header Dashboard 🔹 #
 # ========================== #
-st.Markdown("<h1 style='text-align: center;'&gt;🚲 Bike Sharing Dashboard 📊1>", unsafe_allow_html=true)
+st.Markdown("<h1 style='text-align: center;'&gt;🚲 Bike Sharing &amp; Customer Segmentation 📊1>", unsafe_allow_html=true)
+
+# ========================== #
+# 🔹 Filter data 🔹 #
+# ========================== #
+st.sidebar.header("🔎 Filter data")
+segment_options = df_rfm['Customer_Segment'].unique().tolist()
+selected_segment = st.sidebar.multiselect("Pilih Segmentasi Customer", segment_options, default=segment_options)
+
+# ========================== #
+# 🔹 Tabel Segmentasi Customer 🔹 #
+# ========================== #
+st.subheader("📋 Tabel Segmentasi Customer")
+
+# Filter berdasarkan pilihan pengguna
+filtered_df = df_rfm[df_rfm['Customer_Segment'].isin(selected_segment)]
+st.DataFrame(filtered_df.head(10))  # Menampilkan 10 data pertama
+
+# ========================== #
+# 🔹 Visualisasi Distribusi Customer 🔹 #
+# ========================== #
+st.subheader("👥 Distribusi Customer Berdasarkan Segmentasi RFM")
+
+# Mengecek apakah kolom 'Customer_Segment' tersedia
+df_rfm['Customer_Segment'] = df_rfm['Customer_Segment'].astype(str)  # Pastikan format teks
+customer_count = df_rfm['Customer_Segment'].value_counts().reset_index()
+customer_count.Columns = ["Segment", "Jumlah Customer"]
+
+# Membuat visualisasi
+fig, ax = plt.subplots(figsize=(10, 6))
+sns.barplot(data=customer_count, x="Segment", y="Jumlah Customer", palette="Pastel", ax=ax)
+ax.set_xlabel("Kategori Customer")
+ax.set_ylabel("Jumlah Customer")
+ax.set_title("Distribusi Customer Berdasarkan Segmentasi RFM")
+plt.xticks(Rotation=30)
+
+# Menampilkan plot di Streamlit
+st.pyplot(fig)
 
 # ========================== #
 # 🔹 Statistik Ringkasan 🔹 #
 # ========================== #
 st.sidebar.subheader("📊 Statistik Ringkasan")
 
-If "count" in df.Columns:
-    total_count = df["count"].sum()
-    st.sidebar.metric("Total Pengguna Sepeda", total_count)
-
-# ========================== #
-# 🔹 Visualisasi data 🔹 #
-# ========================== #
-st.subheader("📊 Tren Penggunaan Sepeda")
-
-If "datetime" in df.Columns and "count" in df.Columns:
-    df["datetime"] = pd.to_datetime(df["datetime"])
-    df.set_index("datetime", inplace=True)
-    df_resampled = df.resample("D").sum()
-
-    fig, ax = plt.subplots(figsize=(12, 6))
-    sns.lineplot(Data=df_resampled, x=df_resampled.index, y="count", ax=ax)
-    ax.set_xlabel("Tanggal")
-    ax.set_ylabel("Jumlah Pengguna")
-    ax.set_title("Tren Harian Penggunaan Sepeda")
-    plt.xticks(Rotation=30)
-
-    st.pyplot(fig)
-else:
-    st.error("Kolom 'datetime' atau 'count' tidak ditemukan dalam dataset!")
+# Menampilkan jumlah total customer per segment jika kolom "Customer_ID" ada
+If "customer_id" in df_rfm.Columns:
+    total_customer = df_rfm.groupby("Customer_Segment")["customer_id"].count().reset_index()
+    total_customer.Columns = ["Segment", "Total Customer"]
+    st.sidebar.write("Total Customer per Segmentasi:")
+    st.sidebar.DataFrame(total_customer)
 
 # ========================== #
 # 🔹 Footer Dashboard 🔹 #
 # ========================== #
 st.Markdown("---")
-st.Markdown("  Sandy Tirta Yudha | © 2025 ", unsafe_allow_html=true)
+st.Markdown("<p style='text-align: center;'&gt; Sandy Tirta Yudha | © 2025>", unsafe_allow_html=true)
