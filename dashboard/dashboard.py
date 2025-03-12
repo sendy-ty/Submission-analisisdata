@@ -67,15 +67,15 @@ st.subheader("👥 Distribusi Customer Berdasarkan Segmentasi RFM")
 # Mengecek apakah kolom 'Customer_Segment' tersedia
 df_rfm['Customer_Segment'] = df_rfm['Customer_Segment'].astype(str)  # Pastikan format teks
 customer_count = df_rfm['Customer_Segment'].value_counts().reset_index()
-customer_count.columns = ["Segment", "Jumlah Customer"]
+customer_count.Columns = ["Segment", "Jumlah Customer"]
 
 # Membuat visualisasi
 fig, ax = plt.subplots(figsize=(10, 6))
-sns.barplot(data=customer_count, x="Segment", y="Jumlah Customer", palette="pastel", ax=ax)
+sns.barplot(data=customer_count, x="Segment", y="Jumlah Customer", palette="Pastel", ax=ax)
 ax.set_xlabel("Kategori Customer")
 ax.set_ylabel("Jumlah Customer")
 ax.set_title("Distribusi Customer Berdasarkan Segmentasi RFM")
-plt.xticks(rotation=30)
+plt.xticks(Rotation=30)
 
 # Menampilkan plot di Streamlit
 st.pyplot(fig)
@@ -86,14 +86,14 @@ st.pyplot(fig)
 st.sidebar.subheader("📊 Statistik Ringkasan")
 
 # Menampilkan jumlah total customer per segment jika kolom "Customer_ID" ada
-if "Customer_ID" in df_rfm.columns:
-    total_customer = df_rfm.groupby("Customer_Segment")["Customer_ID"].count().reset_index()
-    total_customer.columns = ["Segment", "Total Customer"]
+If "customer_id" in df_rfm.Columns:
+    total_customer = df_rfm.groupby("Customer_Segment")["customer_id"].count().reset_index()
+    total_customer.Columns = ["Segment", "Total Customer"]
     st.sidebar.write("Total Customer per Segmentasi:")
-    st.sidebar.dataframe(total_customer)
+    st.sidebar.DataFrame(total_customer)
 
 # ========================== #
 # 🔹 Footer Dashboard 🔹 #
 # ========================== #
-st.markdown("---")
-st.markdown("<p style='text-align: center;'> Sandy Tirta Yudha | © 2025</p>", unsafe_allow_html=True)
+st.Markdown("---")
+st.Markdown("<p style='text-align: center;'&gt; Sandy Tirta Yudha | © 2025>", unsafe_allow_html=true)
