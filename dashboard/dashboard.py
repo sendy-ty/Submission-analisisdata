@@ -1,22 +1,21 @@
-import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+Import Streamlit as st
+Import Pandas as pd
+Import matplotlib.pyplot as plt
+Import seaborn as sns
 
 # ========================== #
 # 🔹 Konfigurasi Dashboard 🔹 #
 # ========================== #
 st.set_page_config(
-    page_title="Bike Sharing & Customer Segmentation Dashboard",
+    page_title="Bike Sharing &amp; Customer Segmentation Dashboard",
     page_icon="🚲",
-    layout="wide"
+    Layout="Wide"
 )
 
 # ========================== #
 # 🔹 Membaca Dataset 🔹 #
 # ========================== #
-file_path = "D:\Submission\Dashboard\data.csv"
-rfm_path = "D:/Submission/Dashboard/customer_segmentation.csv"
+file_path = "data.csv"  # Sesuaikan dengan path yang diunggah
 
 try:
     df = pd.read_csv(file_path)
@@ -28,72 +27,43 @@ except Exception as e:
     st.error(f"❌ Terjadi kesalahan saat membaca file: {e}")
     st.stop()
 
-try:
-    df_rfm = pd.read_csv(rfm_path)
-    st.success("✅ Dataset RFM berhasil dimuat!")
-except FileNotFoundError:
-    st.error(f"❌ File '{rfm_path}' tidak ditemukan. Periksa kembali lokasi file!")
-    st.stop()
-except Exception as e:
-    st.error(f"❌ Terjadi kesalahan saat membaca file: {e}")
-    st.stop()
-
 # ========================== #
 # 🔹 Header Dashboard 🔹 #
 # ========================== #
-st.markdown("<h1 style='text-align: center;'>🚲 Bike Sharing & Customer Segmentation 📊</h1>", unsafe_allow_html=True)
-
-# ========================== #
-# 🔹 Filter Data 🔹 #
-# ========================== #
-st.sidebar.header("🔎 Filter Data")
-segment_options = df_rfm['Customer_Segment'].unique().tolist()
-selected_segment = st.sidebar.multiselect("Pilih Segmentasi Customer", segment_options, default=segment_options)
-
-# ========================== #
-# 🔹 Tabel Segmentasi Customer 🔹 #
-# ========================== #
-st.subheader("📋 Tabel Segmentasi Customer")
-
-# Filter berdasarkan pilihan pengguna
-filtered_df = df_rfm[df_rfm['Customer_Segment'].isin(selected_segment)]
-st.dataframe(filtered_df.head(10))  # Menampilkan 10 data pertama
-
-# ========================== #
-# 🔹 Visualisasi Distribusi Customer 🔹 #
-# ========================== #
-st.subheader("👥 Distribusi Customer Berdasarkan Segmentasi RFM")
-
-# Mengecek apakah kolom 'Customer_Segment' tersedia
-df_rfm['Customer_Segment'] = df_rfm['Customer_Segment'].astype(str)  # Pastikan format teks
-customer_count = df_rfm['Customer_Segment'].value_counts().reset_index()
-customer_count.Columns = ["Segment", "Jumlah Customer"]
-
-# Membuat visualisasi
-fig, ax = plt.subplots(figsize=(10, 6))
-sns.barplot(data=customer_count, x="Segment", y="Jumlah Customer", palette="Pastel", ax=ax)
-ax.set_xlabel("Kategori Customer")
-ax.set_ylabel("Jumlah Customer")
-ax.set_title("Distribusi Customer Berdasarkan Segmentasi RFM")
-plt.xticks(Rotation=30)
-
-# Menampilkan plot di Streamlit
-st.pyplot(fig)
+st.Markdown("<h1 style='text-align: center;'&gt;🚲 Bike Sharing Dashboard 📊1>", unsafe_allow_html=true)
 
 # ========================== #
 # 🔹 Statistik Ringkasan 🔹 #
 # ========================== #
 st.sidebar.subheader("📊 Statistik Ringkasan")
 
-# Menampilkan jumlah total customer per segment jika kolom "Customer_ID" ada
-If "customer_id" in df_rfm.Columns:
-    total_customer = df_rfm.groupby("Customer_Segment")["customer_id"].count().reset_index()
-    total_customer.Columns = ["Segment", "Total Customer"]
-    st.sidebar.write("Total Customer per Segmentasi:")
-    st.sidebar.DataFrame(total_customer)
+If "count" in df.Columns:
+    total_count = df["count"].sum()
+    st.sidebar.metric("Total Pengguna Sepeda", total_count)
+
+# ========================== #
+# 🔹 Visualisasi data 🔹 #
+# ========================== #
+st.subheader("📊 Tren Penggunaan Sepeda")
+
+If "datetime" in df.Columns and "count" in df.Columns:
+    df["datetime"] = pd.to_datetime(df["datetime"])
+    df.set_index("datetime", inplace=True)
+    df_resampled = df.resample("D").sum()
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+    sns.lineplot(Data=df_resampled, x=df_resampled.index, y="count", ax=ax)
+    ax.set_xlabel("Tanggal")
+    ax.set_ylabel("Jumlah Pengguna")
+    ax.set_title("Tren Harian Penggunaan Sepeda")
+    plt.xticks(Rotation=30)
+
+    st.pyplot(fig)
+else:
+    st.error("Kolom 'datetime' atau 'count' tidak ditemukan dalam dataset!")
 
 # ========================== #
 # 🔹 Footer Dashboard 🔹 #
 # ========================== #
 st.Markdown("---")
-st.Markdown("<p style='text-align: center;'&gt; Sandy Tirta Yudha | © 2025>", unsafe_allow_html=true)
+st.Markdown("  Sandy Tirta Yudha | © 2025 ", unsafe_allow_html=true)
