@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+from pathlib import Path
 
 # ========================== #
 # 🔹 Konfigurasi Dashboard 🔹 #
@@ -14,54 +15,99 @@ st.set_page_config(
 )
 
 # ========================== #
-# 🔹 Membaca Dataset 🔹 #
+# 🔹 Membaca Dataset dengan Fallback Strategy 🔹 #
 # ========================== #
-# Menggunakan path relatif berdasarkan lokasi script
-# Dapatkan path absolut ke direktori yang berisi script ini
-current_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Definisikan path ke file data relatif terhadap script
-data_file = os.path.join(current_dir, "data.csv")
-rfm_file = os.path.join(current_dir, "customer_segmentation.csv")
+# Daftar possible paths untuk mencari file
+possible_data_paths = [
+    # Path relatif terhadap script (untuk development)
+    Path(os.path.dirname(os.path.abspath(__file__))) / "data.csv",
+    # Path relatif terhadap current working directory (untuk Streamlit Cloud)
+    Path(os.getcwd()) / "data.csv",
+    # Path relatif ke root repository (untuk Streamlit Cloud)
+    Path(os.getcwd()) / "dashboard" / "data.csv",
+    # Path satu level di atas (jika berada dalam subfolder)
+    Path(os.getcwd()).parent / "data.csv",
+    # Mencoba path absolut jika file sudah diupload ke Streamlit Cloud
+    Path("/mount/src/submission-analisisdata/dashboard/data.csv"),
+    Path("/mount/src/submission-analisisdata/data.csv")
+]
 
-# Menampilkan lokasi file untuk membantu debugging
-st.sidebar.caption(f"Lokasi file data: {data_file}")
-st.sidebar.caption(f"Lokasi file RFM: {rfm_file}")
+possible_rfm_paths = [
+    # Path relatif terhadap script (untuk development)
+    Path(os.path.dirname(os.path.abspath(__file__))) / "customer_segmentation.csv",
+    # Path relatif terhadap current working directory (untuk Streamlit Cloud)
+    Path(os.getcwd()) / "customer_segmentation.csv",
+    # Path relatif ke root repository (untuk Streamlit Cloud)
+    Path(os.getcwd()) / "dashboard" / "customer_segmentation.csv",
+    # Path satu level di atas (jika berada dalam subfolder)
+    Path(os.getcwd()).parent / "customer_segmentation.csv",
+    # Mencoba path absolut jika file sudah diupload ke Streamlit Cloud
+    Path("/mount/src/submission-analisisdata/dashboard/customer_segmentation.csv"),
+    Path("/mount/src/submission-analisisdata/customer_segmentation.csv")
+]
 
-try:
-    df = pd.read_csv(data_file)
-    st.success("✅ Dataset berhasil dimuat!")
-except FileNotFoundError:
-    st.error(f"❌ File '{data_file}' tidak ditemukan. Pastikan file berada di folder yang sama dengan script!")
-    # Alternatif jika file tetap tidak ditemukan
-    alternative_data_path = os.path.join(os.getcwd(), "data.csv")
-    st.info(f"Mencoba alternatif path: {alternative_data_path}")
+# Logging lokasi file untuk debugging
+with st.expander("📂 Debug Info (File Paths)"):
+    st.write("Current working directory:", os.getcwd())
+    st.write("Script directory:", os.path.dirname(os.path.abspath(__file__)))
+    st.write("Possible data paths:")
+    for path in possible_data_paths:
+        st.write(f"- {path} (exists: {path.exists()})")
+    st.write("Possible RFM paths:")
+    for path in possible_rfm_paths:
+        st.write(f"- {path} (exists: {path.exists()})")
+
+# Fungsi untuk mencari file yang ada
+def find_existing_file(possible_paths):
+    for path in possible_paths:
+        if path.exists():
+            return str(path)
+    return None
+
+# Cari file data
+data_file = find_existing_file(possible_data_paths)
+rfm_file = find_existing_file(possible_rfm_paths)
+
+# Membaca data
+# Jika file tidak ditemukan, tampilkan opsi untuk upload file
+df = None
+if data_file:
     try:
-        df = pd.read_csv(alternative_data_path)
-        st.success("✅ Dataset berhasil dimuat menggunakan path alternatif!")
-    except FileNotFoundError:
-        st.error("❌ File data tidak dapat ditemukan. Upload file atau periksa nama file!")
-        st.stop()
-except Exception as e:
-    st.error(f"❌ Terjadi kesalahan saat membaca file: {e}")
-    st.stop()
+        df = pd.read_csv(data_file)
+        st.success(f"✅ Dataset berhasil dimuat dari: {data_file}")
+    except Exception as e:
+        st.error(f"❌ Error saat membaca file data: {e}")
+else:
+    st.warning("⚠️ File data.csv tidak ditemukan. Silakan upload file:")
+    uploaded_data = st.file_uploader("Upload file data.csv", type="csv")
+    if uploaded_data:
+        try:
+            df = pd.read_csv(uploaded_data)
+            st.success("✅ Dataset berhasil dimuat dari uploaded file!")
+        except Exception as e:
+            st.error(f"❌ Error saat membaca uploaded file: {e}")
 
-try:
-    df_rfm = pd.read_csv(rfm_file)
-    st.success("✅ Dataset RFM berhasil dimuat!")
-except FileNotFoundError:
-    st.error(f"❌ File '{rfm_file}' tidak ditemukan. Pastikan file berada di folder yang sama dengan script!")
-    # Alternatif jika file tetap tidak ditemukan
-    alternative_rfm_path = os.path.join(os.getcwd(), "customer_segmentation.csv")
-    st.info(f"Mencoba alternatif path: {alternative_rfm_path}")
+df_rfm = None
+if rfm_file:
     try:
-        df_rfm = pd.read_csv(alternative_rfm_path)
-        st.success("✅ Dataset RFM berhasil dimuat menggunakan path alternatif!")
-    except FileNotFoundError:
-        st.error("❌ File RFM tidak dapat ditemukan. Upload file atau periksa nama file!")
-        st.stop()
-except Exception as e:
-    st.error(f"❌ Terjadi kesalahan saat membaca file: {e}")
+        df_rfm = pd.read_csv(rfm_file)
+        st.success(f"✅ Dataset RFM berhasil dimuat dari: {rfm_file}")
+    except Exception as e:
+        st.error(f"❌ Error saat membaca file RFM: {e}")
+else:
+    st.warning("⚠️ File customer_segmentation.csv tidak ditemukan. Silakan upload file:")
+    uploaded_rfm = st.file_uploader("Upload file customer_segmentation.csv", type="csv")
+    if uploaded_rfm:
+        try:
+            df_rfm = pd.read_csv(uploaded_rfm)
+            st.success("✅ Dataset RFM berhasil dimuat dari uploaded file!")
+        except Exception as e:
+            st.error(f"❌ Error saat membaca uploaded file: {e}")
+
+# Cek apakah data berhasil dimuat sebelum melanjutkan
+if df is None or df_rfm is None:
+    st.error("❌ Data tidak lengkap. Dashboard tidak dapat ditampilkan.")
     st.stop()
 
 # ========================== #
